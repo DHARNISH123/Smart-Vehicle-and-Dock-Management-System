@@ -1,16 +1,33 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api, { API_BASE_URL } from "../api";
 import { Box, Paper, Typography, Grid } from "@mui/material";
-
-const authHeaders = () => ({ Authorization: `Bearer ${localStorage.getItem("auth_token")}` });
+import { io } from "socket.io-client";
 
 function DisplayBoard() {
   const [queue, setQueue] = useState([]);
   const [docks, setDocks] = useState([]);
 
+  const fetchData = () => {
+    api.get("/vehicles/queue").then((res) => setQueue(res.data)).catch(console.error);
+    api.get("/docks").then((res) => setDocks(res.data)).catch(console.error);
+  };
+
   useEffect(() => {
-    axios.get("http://localhost:5000/api/vehicles/queue", { headers: authHeaders() }).then((res) => setQueue(res.data));
-    axios.get("http://localhost:5000/api/docks", { headers: authHeaders() }).then((res) => setDocks(res.data));
+    fetchData();
+
+    const socket = io(API_BASE_URL);
+    
+    socket.on("vehicle_update", () => {
+      fetchData();
+    });
+    
+    socket.on("dock_update", () => {
+      fetchData();
+    });
+
+    return () => {
+      socket.disconnect();
+    };
   }, []);
 
   return (

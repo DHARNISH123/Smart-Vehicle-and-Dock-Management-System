@@ -1,14 +1,12 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api";
 import { Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
-
-const authHeaders = () => ({ Authorization: `Bearer ${localStorage.getItem("auth_token")}` });
 
 function AdminPanel() {
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
-    axios.get("http://localhost:5000/api/users", { headers: authHeaders() }).then((res) => setUsers(res.data));
+    api.get("/users").then((res) => setUsers(res.data));
   }, []);
 
   return (

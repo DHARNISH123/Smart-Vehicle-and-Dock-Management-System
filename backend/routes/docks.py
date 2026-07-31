@@ -2,7 +2,9 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
 from models import Dock, DockAllocation, Vehicle
 from services.allocation import manual_allocate
-from database import db
+from database import db, socketio
+from routes.vehicles import serialize_vehicle
+from services.notifications import send_whatsapp_message
 
 docks_bp = Blueprint("docks", __name__)
 
@@ -24,6 +26,13 @@ def allocate_dock():
     allocation = manual_allocate(dock_id, vehicle)
     if not allocation:
         return jsonify({"error": "Unable to allocate dock."}), 400
+        
+    socketio.emit("dock_update", {"dock_id": dock_id, "vehicle_id": vehicle.id, "status": "allocated"})
+    socketio.emit("vehicle_update", serialize_vehicle(vehicle))
+    
+    msg = f"Attention Driver! You have been allocated to {allocation.dock.name}. Please proceed directly to the dock with vehicle {vehicle.vehicle_number}."
+    send_whatsapp_message(vehicle.id, msg)
+    
     return jsonify({"message": "Vehicle allocated", "allocation": allocation.id})
 
 @docks_bp.route("/allocations", methods=["GET"])

@@ -1,14 +1,12 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api";
 import { Paper, Typography, TableContainer, Table, TableHead, TableRow, TableCell, TableBody } from "@mui/material";
-
-const authHeaders = () => ({ Authorization: `Bearer ${localStorage.getItem("auth_token")}` });
 
 function VehicleTracking() {
   const [vehicles, setVehicles] = useState([]);
 
   useEffect(() => {
-    axios.get("http://localhost:5000/api/vehicles", { headers: authHeaders() }).then((res) => setVehicles(res.data));
+    api.get("/vehicles").then((res) => setVehicles(res.data)).catch(console.error);
   }, []);
 
   return (

@@ -1,14 +1,12 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api";
 import { Paper, Typography, Grid } from "@mui/material";
-
-const authHeaders = () => ({ Authorization: `Bearer ${localStorage.getItem("auth_token")}` });
 
 function Reports() {
   const [kpis, setKpis] = useState(null);
 
   useEffect(() => {
-    axios.get("http://localhost:5000/api/reports/kpis", { headers: authHeaders() }).then((res) => setKpis(res.data));
+    api.get("/reports/kpis").then((res) => setKpis(res.data)).catch(console.error);
   }, []);
 
   return (

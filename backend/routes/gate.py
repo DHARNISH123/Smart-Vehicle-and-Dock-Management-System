@@ -2,7 +2,8 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
 from datetime import datetime
 from models import Vehicle, VehicleLog
-from database import db
+from database import db, socketio
+from routes.vehicles import serialize_vehicle
 
 gate_bp = Blueprint("gate", __name__)
 
@@ -34,4 +35,7 @@ def gate_entry():
     db.session.commit()
     db.session.add(VehicleLog(vehicle=vehicle, status=vehicle.status, notes="Gate entry created"))
     db.session.commit()
+    
+    socketio.emit("vehicle_update", serialize_vehicle(vehicle))
+    
     return jsonify({"vehicle_id": vehicle.id, "token": vehicle.token, "status": vehicle.status})

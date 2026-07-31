@@ -1,11 +1,10 @@
 import os
 from datetime import datetime
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
-from flask_socketio import SocketIO
 from config import Config
-from database import db, migrate
+from database import db, migrate, socketio
 from models import User, Vehicle, VehicleLog, Dock, DockAllocation, Supplier, Transporter
 from routes.auth import auth_bp
 from routes.vehicles import vehicles_bp
@@ -16,13 +15,17 @@ from routes.gate import gate_bp
 
 
 def create_app():
-    app = Flask(__name__)
+    app = Flask(
+        __name__,
+        static_folder=os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend", "dist")),
+        static_url_path="/"
+    )
     app.config.from_object(Config)
     CORS(app)
     db.init_app(app)
     migrate.init_app(app, db)
     jwt = JWTManager(app)
-    socketio = SocketIO(app, cors_allowed_origins="*")
+    socketio.init_app(app)
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(vehicles_bp, url_prefix="/api/vehicles")
@@ -34,6 +37,15 @@ def create_app():
     @app.route("/api/ping")
     def ping():
         return jsonify({"message": "pong", "time": datetime.utcnow().isoformat()})
+
+    @app.route("/", defaults={"path": ""})
+    @app.route("/<path:path>")
+    def serve(path):
+        if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
+            return send_from_directory(app.static_folder, path)
+        else:
+            return send_from_directory(app.static_folder, "index.html")
+
 
     def ensure_seed_data():
         db.create_all()

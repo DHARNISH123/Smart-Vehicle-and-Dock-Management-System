@@ -1,14 +1,27 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api, { API_BASE_URL } from "../api";
 import { Paper, Typography, TableContainer, Table, TableHead, TableRow, TableCell, TableBody } from "@mui/material";
-
-const authHeaders = () => ({ Authorization: `Bearer ${localStorage.getItem("auth_token")}` });
+import { io } from "socket.io-client";
 
 function VehicleQueue() {
   const [queue, setQueue] = useState([]);
 
+  const fetchQueue = () => {
+    api.get("/vehicles/queue").then((res) => setQueue(res.data)).catch(console.error);
+  };
+
   useEffect(() => {
-    axios.get("http://localhost:5000/api/vehicles/queue", { headers: authHeaders() }).then((res) => setQueue(res.data));
+    fetchQueue();
+
+    const socket = io(API_BASE_URL);
+    
+    socket.on("vehicle_update", () => {
+      fetchQueue();
+    });
+
+    return () => {
+      socket.disconnect();
+    };
   }, []);
 
   return (

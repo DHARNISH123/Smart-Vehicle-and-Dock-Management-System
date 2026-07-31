@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api, { API_BASE_URL } from "../api";
 import { Paper, Typography, Grid, MenuItem, TextField, Button } from "@mui/material";
-
-const authHeaders = () => ({ Authorization: `Bearer ${localStorage.getItem("auth_token")}` });
+import { io } from "socket.io-client";
 
 function DockManagement() {
   const [docks, setDocks] = useState([]);
@@ -11,17 +10,34 @@ function DockManagement() {
   const [selectedVehicle, setSelectedVehicle] = useState("");
   const [message, setMessage] = useState("");
 
+  const fetchData = () => {
+    api.get("/docks").then((res) => setDocks(res.data)).catch(console.error);
+    api.get("/vehicles/queue").then((res) => setQueue(res.data)).catch(console.error);
+  };
+
   useEffect(() => {
-    axios.get("http://localhost:5000/api/docks", { headers: authHeaders() }).then((res) => setDocks(res.data));
-    axios.get("http://localhost:5000/api/vehicles/queue", { headers: authHeaders() }).then((res) => setQueue(res.data));
+    fetchData();
+
+    const socket = io(API_BASE_URL);
+    
+    socket.on("vehicle_update", () => {
+      fetchData();
+    });
+    
+    socket.on("dock_update", () => {
+      fetchData();
+    });
+
+    return () => {
+      socket.disconnect();
+    };
   }, []);
 
   const allocate = async () => {
     try {
-      const response = await axios.post(
-        "http://localhost:5000/api/docks/allocate",
-        { dock_id: selectedDock, vehicle_id: selectedVehicle },
-        { headers: authHeaders() }
+      const response = await api.post(
+        "/docks/allocate",
+        { dock_id: selectedDock, vehicle_id: selectedVehicle }
       );
       setMessage(response.data.message);
     } catch (err) {

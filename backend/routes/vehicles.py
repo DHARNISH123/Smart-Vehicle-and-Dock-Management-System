@@ -3,7 +3,8 @@ from flask_jwt_extended import jwt_required
 from datetime import datetime
 from models import Vehicle, VehicleLog, Supplier, Transporter
 from services.allocation import compute_priority, auto_allocate
-from database import db
+from database import db, socketio
+from services.notifications import send_whatsapp_message
 
 vehicles_bp = Blueprint("vehicles", __name__)
 
@@ -52,7 +53,19 @@ def create_entry():
     db.session.add(VehicleLog(vehicle=vehicle, status=vehicle.status, notes="Registered at gate"))
     db.session.commit()
     allocation = auto_allocate(vehicle)
-    return jsonify({"vehicle": serialize_vehicle(vehicle), "allocation": allocation and allocation.id})
+    
+    vehicle_data = serialize_vehicle(vehicle)
+    socketio.emit("vehicle_update", vehicle_data)
+    
+    if allocation:
+        socketio.emit("dock_update", {"dock_id": allocation.dock_id, "status": "allocated"})
+        msg = f"Welcome to Gate-2-Dock! Your vehicle {vehicle.vehicle_number} has been allocated to {allocation.dock.name}. Please proceed directly to the dock."
+        send_whatsapp_message(vehicle.id, msg)
+    else:
+        msg = f"Welcome to Gate-2-Dock! Your Token is {vehicle.token}. You are now in the waiting queue. Track live status: http://localhost:3000/track/{vehicle.token}"
+        send_whatsapp_message(vehicle.id, msg)
+        
+    return jsonify({"vehicle": vehicle_data, "allocation": allocation and allocation.id})
 
 @vehicles_bp.route("/<int:vehicle_id>/status", methods=["PATCH"])
 @jwt_required()
@@ -67,7 +80,44 @@ def update_status(vehicle_id):
     db.session.add(vehicle)
     db.session.add(VehicleLog(vehicle=vehicle, status=status, notes=notes))
     db.session.commit()
-    return jsonify(serialize_vehicle(vehicle))
+    
+    vehicle_data = serialize_vehicle(vehicle)
+    socketio.emit("vehicle_update", vehicle_data)
+    
+    if status == "Completed":
+        msg = f"Loading/unloading complete for Token {vehicle.token}! You are cleared to exit via Gate Out. Thank you."
+        send_whatsapp_message(vehicle.id, msg)
+    elif status == "Waiting":
+        msg = f"Yard alert for Token {vehicle.token}. You have been placed on standby. Please wait in the holding yard."
+        send_whatsapp_message(vehicle.id, msg)
+    
+    return jsonify(vehicle_data)
+
+@vehicles_bp.route("/public/track/<string:token>", methods=["GET"])
+def public_track_vehicle(token):
+    vehicle = Vehicle.query.filter_by(token=token).first()
+    if not vehicle:
+        return jsonify({"error": "Vehicle token not found"}), 404
+        
+    position = 0
+    if vehicle.status in ["Reported", "Gate In", "Waiting"]:
+        position = Vehicle.query.filter(
+            Vehicle.status.in_(["Reported", "Gate In", "Waiting"]),
+            Vehicle.report_time <= vehicle.report_time
+        ).count()
+        
+    data = serialize_vehicle(vehicle)
+    data["queue_position"] = position
+    
+    if vehicle.allocation and vehicle.allocation.status == "Allocated":
+        data["dock_code"] = vehicle.allocation.dock.code
+        data["dock_name"] = vehicle.allocation.dock.name
+    else:
+        data["dock_code"] = None
+        data["dock_name"] = None
+        
+    return jsonify(data)
+
 
 @vehicles_bp.route("/suppliers", methods=["GET"])
 @jwt_required()

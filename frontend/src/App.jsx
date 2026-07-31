@@ -10,11 +10,13 @@ import Reports from "./pages/Reports";
 import AdminPanel from "./pages/AdminPanel";
 import DisplayBoard from "./pages/DisplayBoard";
 import PrivateRoute from "./components/PrivateRoute";
+import DriverTracker from "./pages/DriverTracker";
 
 function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/track/:token" element={<DriverTracker />} />
       <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
         <Route index element={<Dashboard />} />
         <Route path="gate-entry" element={<GateEntry />} />

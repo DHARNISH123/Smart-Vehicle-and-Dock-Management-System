@@ -1,0 +1,20 @@
+import axios from "axios";
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 
+  (import.meta.env.MODE === "production" ? window.location.origin : "http://localhost:5000");
+
+const api = axios.create({
+  baseURL: `${API_BASE_URL}/api`,
+});
+
+// Automatically inject JWT Token if it exists in local storage
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("auth_token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+export default api;
+export { API_BASE_URL };

@@ -1,12 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import axios from "axios";
+import api from "../api";
 import ContentPasteOutlinedIcon from "@mui/icons-material/ContentPasteOutlined";
 import LocalShippingOutlinedIcon from "@mui/icons-material/LocalShippingOutlined";
 import WarehouseOutlinedIcon from "@mui/icons-material/WarehouseOutlined";
 import CheckCircleOutlineOutlinedIcon from "@mui/icons-material/CheckCircleOutlineOutlined";
 import StorefrontOutlinedIcon from "@mui/icons-material/StorefrontOutlined";
-
-const authHeaders = () => ({ Authorization: `Bearer ${localStorage.getItem("auth_token")}` });
 
 const fallbackDocks = [
   { id: 1, name: "Dock Alpha", code: "Dock 1", is_available: false, current_vehicle: "TN14X4646", token: "#TKN-0038" },
@@ -24,10 +22,10 @@ function Dashboard() {
   const [vehicles, setVehicles] = useState([]);
 
   useEffect(() => {
-    axios.get("http://localhost:5000/api/reports/dashboard", { headers: authHeaders() }).then((res) => setDashboard(res.data)).catch(console.error);
-    axios.get("http://localhost:5000/api/docks", { headers: authHeaders() }).then((res) => setDocks(res.data)).catch(console.error);
-    axios.get("http://localhost:5000/api/vehicles/queue", { headers: authHeaders() }).then((res) => setQueue(res.data)).catch(console.error);
-    axios.get("http://localhost:5000/api/vehicles", { headers: authHeaders() }).then((res) => setVehicles(res.data)).catch(console.error);
+    api.get("/reports/dashboard").then((res) => setDashboard(res.data)).catch(console.error);
+    api.get("/docks").then((res) => setDocks(res.data)).catch(console.error);
+    api.get("/vehicles/queue").then((res) => setQueue(res.data)).catch(console.error);
+    api.get("/vehicles").then((res) => setVehicles(res.data)).catch(console.error);
   }, []);
 
   const displayDocks = useMemo(() => {

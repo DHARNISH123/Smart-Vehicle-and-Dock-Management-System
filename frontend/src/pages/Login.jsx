@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../api";
 import { Box, Button, TextField, Typography, InputAdornment, IconButton } from "@mui/material";
 import LocalShippingOutlinedIcon from "@mui/icons-material/LocalShippingOutlined";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
@@ -26,7 +26,7 @@ function Login() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     try {
-      const response = await axios.post("http://localhost:5000/api/auth/login", { username, password });
+      const response = await api.post("/auth/login", { username, password });
       localStorage.setItem("auth_token", response.data.access_token);
       navigate("/");
     } catch (err) {

@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api";
 import { TextField, Button, MenuItem, Typography, Paper, Box, Grid } from "@mui/material";
-
-const authHeaders = () => ({ Authorization: `Bearer ${localStorage.getItem("auth_token")}` });
 
 function GateEntry() {
   const [vehicleNumber, setVehicleNumber] = useState("");
@@ -16,17 +14,16 @@ function GateEntry() {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    axios.get("http://localhost:5000/api/vehicles/suppliers", { headers: authHeaders() }).then((res) => setSuppliers(res.data));
-    axios.get("http://localhost:5000/api/vehicles/transporters", { headers: authHeaders() }).then((res) => setTransporters(res.data));
+    api.get("/vehicles/suppliers").then((res) => setSuppliers(res.data)).catch(console.error);
+    api.get("/vehicles/transporters").then((res) => setTransporters(res.data)).catch(console.error);
   }, []);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     try {
-      const response = await axios.post(
-        "http://localhost:5000/api/vehicles/entry",
-        { vehicle_number: vehicleNumber, driver_name: driverName, driver_mobile: driverMobile, material_type: materialType, supplier_id: supplierId, transporter_id: transporterId },
-        { headers: authHeaders() }
+      const response = await api.post(
+        "/vehicles/entry",
+        { vehicle_number: vehicleNumber, driver_name: driverName, driver_mobile: driverMobile, material_type: materialType, supplier_id: supplierId, transporter_id: transporterId }
       );
       setMessage(`Vehicle registered. Token ${response.data.vehicle.token}`);
     } catch (err) {
