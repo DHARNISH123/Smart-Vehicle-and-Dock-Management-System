@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: gate2dock
+    runtime: docker
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: gate2dock-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: PORT
+        value: 5000
+
+databases:
+  - name: gate2dock-db
+    plan: free
