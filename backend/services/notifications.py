@@ -14,7 +14,7 @@ def send_whatsapp_message(vehicle_id: int, message: str):
     auth_token = Config.WHATSAPP_AUTH_TOKEN
     from_number = Config.WHATSAPP_FROM
     if not account_sid or not auth_token:
-        notification = Notification(vehicle=vehicle, message=message, delivered=False)
+        notification = Notification(vehicle_id=vehicle.id, message=message, delivered=False)
         db.session.add(notification)
         db.session.commit()
         return {
@@ -29,7 +29,7 @@ def send_whatsapp_message(vehicle_id: int, message: str):
         "Body": message,
     }
     response = requests.post(url, data=payload, auth=(account_sid, auth_token))
-    notification = Notification(vehicle=vehicle, message=message, delivered=response.ok)
+    notification = Notification(vehicle_id=vehicle.id, message=message, delivered=response.ok)
     db.session.add(notification)
     db.session.commit()
     return {
