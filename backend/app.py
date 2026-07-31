@@ -25,6 +25,12 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
     jwt = JWTManager(app)
+
+    import json
+    @jwt.user_identity_loader
+    def user_identity_lookup(user):
+        return json.dumps(user) if isinstance(user, dict) else str(user)
+
     socketio.init_app(app)
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
