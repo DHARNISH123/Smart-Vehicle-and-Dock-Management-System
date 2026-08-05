@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import jwt_required, get_jwt_identity
+import json
 from datetime import datetime
 from models import Vehicle, VehicleLog, Supplier, Transporter
 from services.allocation import compute_priority, auto_allocate
@@ -31,8 +32,26 @@ def create_entry():
     material_type = data.get("material_type")
     supplier_id = data.get("supplier_id")
     transporter_id = data.get("transporter_id")
+    
+    # Phase 1 Fields
+    direction = data.get("direction", "Inbound")
+    priority_level = data.get("priority_level", "Normal")
+    expected_loading_time = int(data.get("expected_loading_time") or 0)
+    remarks = data.get("remarks", "")
+    rfid_tag = data.get("rfid_tag", "")
+    qr_code = data.get("qr_code", "")
+    anpr_license_plate = data.get("anpr_license_plate", "")
+    
     if not vehicle_number or not driver_name or not driver_mobile or not material_type:
         return jsonify({"error": "Required fields are missing."}), 400
+
+    # Retrieve Operator Username from JWT
+    identity_str = get_jwt_identity()
+    try:
+        identity_dict = json.loads(identity_str)
+        gate_operator = identity_dict.get("username", "system")
+    except Exception:
+        gate_operator = str(identity_str)
 
     token = f"TKN-{datetime.utcnow().year}-{int(datetime.utcnow().timestamp()) % 10000}"
     vehicle = Vehicle(
@@ -45,6 +64,14 @@ def create_entry():
         status="Reported",
         supplier_id=supplier_id,
         transporter_id=transporter_id,
+        direction=direction,
+        priority_level=priority_level,
+        expected_loading_time=expected_loading_time,
+        remarks=remarks,
+        gate_operator=gate_operator,
+        rfid_tag=rfid_tag,
+        qr_code=qr_code,
+        anpr_license_plate=anpr_license_plate,
     )
     db.session.add(vehicle)
     db.session.commit()
@@ -147,4 +174,12 @@ def serialize_vehicle(vehicle):
         "transporter": vehicle.transporter.name if vehicle.transporter else None,
         "priority_score": vehicle.priority_score,
         "waiting_minutes": wait_minutes,
+        "direction": vehicle.direction,
+        "priority_level": vehicle.priority_level,
+        "expected_loading_time": vehicle.expected_loading_time,
+        "remarks": vehicle.remarks,
+        "gate_operator": vehicle.gate_operator,
+        "rfid_tag": vehicle.rfid_tag,
+        "qr_code": vehicle.qr_code,
+        "anpr_license_plate": vehicle.anpr_license_plate,
     }
