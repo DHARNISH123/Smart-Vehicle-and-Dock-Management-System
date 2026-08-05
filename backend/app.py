@@ -122,3 +122,9 @@ def create_app():
         ensure_seed_data()
 
     return app, socketio
+
+
+if __name__ == "__main__":
+    app, socketio = create_app()
+    port = int(os.getenv("PORT", 5000))
+    socketio.run(app, host="0.0.0.0", port=port, debug=True, allow_unsafe_werkzeug=True)
