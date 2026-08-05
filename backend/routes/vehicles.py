@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 import json
 from datetime import datetime
-from models import Vehicle, VehicleLog, Supplier, Transporter
+from models import Vehicle, VehicleLog, Supplier, Transporter, Dock, DockAllocation
 from services.allocation import compute_priority, auto_allocate
 from database import db, socketio
 from services.notifications import send_whatsapp_message
@@ -94,6 +94,23 @@ def create_entry():
         
     return jsonify({"vehicle": vehicle_data, "allocation": allocation and allocation.id})
 
+ALLOWED_TRANSITIONS = {
+    "Reported": ["Gate In", "Cancelled"],
+    "Gate In": ["Waiting", "Cancelled"],
+    "Waiting": ["Reserved", "Dock In", "Cancelled"],
+    "Reserved": ["Dock In", "Cancelled"],
+    "Dock In": ["Processing", "Cancelled"],
+    "Processing": ["Completed", "Cancelled"],
+    "Completed": ["Gate Out"],
+    "Gate Out": [],
+    "Cancelled": []
+}
+
+def can_transition(current, target):
+    if current == target:
+        return True
+    return target in ALLOWED_TRANSITIONS.get(current, [])
+
 @vehicles_bp.route("/<int:vehicle_id>/status", methods=["PATCH"])
 @jwt_required()
 def update_status(vehicle_id):
@@ -103,11 +120,31 @@ def update_status(vehicle_id):
     notes = data.get("notes")
     if not status:
         return jsonify({"error": "Status required."}), 400
+        
+    if not can_transition(vehicle.status, status):
+        return jsonify({"error": f"Invalid status transition from {vehicle.status} to {status}."}), 400
+        
     vehicle.status = status
     db.session.add(vehicle)
     db.session.add(VehicleLog(vehicle=vehicle, status=status, notes=notes))
     db.session.commit()
     
+    if status in ["Completed", "Gate Out", "Cancelled"]:
+        allocation = DockAllocation.query.filter_by(vehicle_id=vehicle.id, completed_at=None).first()
+        if allocation:
+            allocation.completed_at = datetime.utcnow()
+            allocation.status = "Completed" if status == "Completed" else "Cancelled"
+            db.session.add(allocation)
+            
+            dock = Dock.query.get(allocation.dock_id)
+            if dock:
+                dock.is_available = True
+                dock.current_vehicle_id = None
+                db.session.add(dock)
+                
+            db.session.commit()
+            socketio.emit("dock_update", {"dock_id": allocation.dock_id, "status": "free"})
+            
     vehicle_data = serialize_vehicle(vehicle)
     socketio.emit("vehicle_update", vehicle_data)
     
