@@ -1,144 +1,257 @@
-import { useEffect, useMemo, useState } from "react";
-import api from "../api";
+import { useEffect, useState } from "react";
+import api, { API_BASE_URL } from "../api";
 import ContentPasteOutlinedIcon from "@mui/icons-material/ContentPasteOutlined";
 import LocalShippingOutlinedIcon from "@mui/icons-material/LocalShippingOutlined";
 import WarehouseOutlinedIcon from "@mui/icons-material/WarehouseOutlined";
 import CheckCircleOutlineOutlinedIcon from "@mui/icons-material/CheckCircleOutlineOutlined";
-import StorefrontOutlinedIcon from "@mui/icons-material/StorefrontOutlined";
+import QueryBuilderIcon from "@mui/icons-material/QueryBuilder";
+import PendingActionsIcon from "@mui/icons-material/PendingActions";
+import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
+import SettingsSuggestIcon from "@mui/icons-material/SettingsSuggest";
+import { io } from "socket.io-client";
+import { Paper, Typography, Grid, Box, CircularProgress, Card, CardContent } from "@mui/material";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend, PieChart, Pie, Cell } from "recharts";
 
-const fallbackDocks = [
-  { id: 1, name: "Dock Alpha", code: "Dock 1", is_available: false, current_vehicle: "TN14X4646", token: "#TKN-0038" },
-  { id: 2, name: "Dock Beta", code: "Dock 2", is_available: false, current_vehicle: "AP86FG2345", token: "#TKN-0036" },
-  { id: 3, name: "Dock Gamma", code: "Dock 3", is_available: false, current_vehicle: "TN07CJ7842", token: "#TKN-0032" },
-  { id: 4, name: "Dock Delta", code: "Dock 4", is_available: false, current_vehicle: "TN47AS6666", token: "#TKN-0037" },
-  { id: 5, name: "Dock Epsilon", code: "Dock 5", is_available: true, current_vehicle: "", token: "#" },
-  { id: 6, name: "Dock Zeta", code: "Dock 6", is_available: false, current_vehicle: "TN01AA1234", token: "#TKN-0035" },
-];
+const COLORS = ["#0284c7", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#6366f1"];
 
 function Dashboard() {
-  const [dashboard, setDashboard] = useState(null);
+  const [data, setData] = useState(null);
   const [docks, setDocks] = useState([]);
-  const [queue, setQueue] = useState([]);
-  const [vehicles, setVehicles] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchDashboardData = async () => {
+    try {
+      const [dbRes, docksRes] = await Promise.all([
+        api.get("/reports/dashboard"),
+        api.get("/docks")
+      ]);
+      setData(dbRes.data);
+      setDocks(docksRes.data);
+      setLoading(false);
+    } catch (err) {
+      console.error("Error fetching dashboard data", err);
+    }
+  };
 
   useEffect(() => {
-    api.get("/reports/dashboard").then((res) => setDashboard(res.data)).catch(console.error);
-    api.get("/docks").then((res) => setDocks(res.data)).catch(console.error);
-    api.get("/vehicles/queue").then((res) => setQueue(res.data)).catch(console.error);
-    api.get("/vehicles").then((res) => setVehicles(res.data)).catch(console.error);
+    fetchDashboardData();
+
+    // Establish WebSocket listener for live updates (Phase 5)
+    const socket = io(API_BASE_URL);
+    socket.on("vehicle_update", () => fetchDashboardData());
+    socket.on("dock_update", () => fetchDashboardData());
+
+    return () => socket.disconnect();
   }, []);
 
-  const displayDocks = useMemo(() => {
-    const source = docks.length ? docks : fallbackDocks;
-    return source.slice(0, 6).map((dock, index) => {
-      const queued = queue[index];
-      return {
-        ...fallbackDocks[index],
-        ...dock,
-        id: dock.id ?? fallbackDocks[index]?.id ?? index + 1,
-        name: dock.name || fallbackDocks[index]?.name || `Dock ${index + 1}`,
-        code: dock.code || fallbackDocks[index]?.code || `Dock ${index + 1}`,
-        current_vehicle: dock.current_vehicle || queued?.vehicle_number || fallbackDocks[index]?.current_vehicle || "",
-        token: queued?.token ? `#${queued.token}` : fallbackDocks[index]?.token || "#",
-      };
-    });
-  }, [docks, queue]);
+  if (loading || !data) {
+    return (
+      <Box className="flex h-96 items-center justify-center">
+        <CircularProgress />
+      </Box>
+    );
+  }
 
-  const recentActivity = useMemo(() => {
-    const source = vehicles.length ? vehicles : queue;
-    return source.slice(0, 6).map((vehicle, index) => ({
-      id: vehicle.id ?? index,
-      token: vehicle.token ? `#${vehicle.token}` : fallbackDocks[index]?.token || "#TKN-0038",
-      vehicle_number: vehicle.vehicle_number || fallbackDocks[index]?.current_vehicle || "TN14X4646",
-      status: vehicle.status || "Gate In",
-      priority: index % 2 === 0 ? "Normal" : "Urgent",
-      date: vehicle.report_time ? new Date(vehicle.report_time).toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "19 May 2026, 21:25",
-    }));
-  }, [vehicles, queue]);
+  const kpiStats = [
+    { label: "Total Vehicles Today", value: data.total_today, icon: ContentPasteOutlinedIcon, color: "text-sky-600 bg-sky-50" },
+    { label: "In Waiting Queue", value: data.active_queue, icon: LocalShippingOutlinedIcon, color: "text-amber-600 bg-amber-50" },
+    { label: "Dock Utilization", value: `${data.dock_utilization}%`, icon: WarehouseOutlinedIcon, color: "text-violet-600 bg-violet-50" },
+    { label: "Standby / Delayed", value: data.delayed_count, icon: HourglassEmptyIcon, color: "text-rose-600 bg-rose-50" },
+  ];
 
-  const stats = [
-    { label: "Total Vehicles Today", value: dashboard?.total_today ?? 38, icon: ContentPasteOutlinedIcon, color: "text-sky-500" },
-    { label: "In Queue", value: dashboard?.active_queue ?? queue.length ?? 5, icon: LocalShippingOutlinedIcon, color: "text-blue-500" },
-    { label: "Active Docks", value: displayDocks.filter((dock) => !dock.is_available).length, icon: WarehouseOutlinedIcon, color: "text-amber-500" },
-    { label: "Completed Today", value: dashboard?.completed_today ?? 33, icon: CheckCircleOutlineOutlinedIcon, color: "text-green-500" },
+  const averageStats = [
+    { label: "Avg Yard Waiting Time", value: `${data.avg_waiting_time} mins`, icon: QueryBuilderIcon, desc: "From report time to dock allocation" },
+    { label: "Avg Dock Loading Time", value: `${data.avg_processing_time} mins`, icon: PendingActionsIcon, desc: "Actual loading/unloading time" },
+    { label: "Avg Cycle Turnaround Time (TAT)", value: `${data.avg_turnaround_time} mins`, icon: SettingsSuggestIcon, desc: "Gate In to Gate Out cycle duration" },
   ];
 
   return (
-    <div className="space-y-10">
-      <section className="rounded-lg bg-[linear-gradient(100deg,#26499a,#11b3ca)] px-10 py-12 shadow-xl shadow-sky-900/15">
-        <h2 className="text-3xl font-bold text-white">Admin</h2>
+    <div className="space-y-8">
+      {/* Header Banner */}
+      <section className="rounded-xl bg-gradient-to-r from-sky-700 via-indigo-700 to-indigo-800 p-8 text-white shadow-md">
+        <Typography variant="h4" className="!font-bold">Enterprise Analytics Dashboard</Typography>
+        <Typography variant="body1" className="text-sky-200 mt-1">Real-time factory logistics metrics, dock occupancy, and hourly throughput.</Typography>
       </section>
 
-      <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-        {stats.map((item) => {
-          const Icon = item.icon;
+      {/* KPI Cards */}
+      <Grid container spacing={3}>
+        {kpiStats.map((stat) => {
+          const Icon = stat.icon;
           return (
-            <div key={item.label} className="rounded-xl border border-slate-950 bg-white px-7 py-7">
-              <div className="flex items-start justify-between">
-                <p className="text-base text-slate-400">{item.label}</p>
-                <Icon className={item.color} />
-              </div>
-              <p className={`mt-4 text-4xl font-bold ${item.color}`}>{item.value}</p>
-            </div>
-          );
-        })}
-      </section>
-
-      <section>
-        <h3 className="mb-5 text-lg font-bold uppercase tracking-wide text-slate-400">Dock Status</h3>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
-          {displayDocks.map((dock, index) => (
-            <div key={dock.id} className="min-h-60 rounded-xl bg-white p-5 shadow-lg shadow-slate-300/60">
-              <div className="flex items-start gap-3">
-                <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-2xl font-bold ${dock.is_available ? "bg-green-50 text-green-500" : "bg-violet-50 text-violet-400"}`}>
-                  {index + 1}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="font-semibold leading-5 text-slate-950">{dock.name}</p>
-                      <p className="text-sm text-slate-400">{dock.code || `Dock ${index + 1}`}</p>
-                    </div>
-                    <span className={`rounded-full border px-3 py-1 text-xs font-medium ${dock.is_available ? "border-green-500 bg-green-50 text-green-500" : "border-blue-500 bg-blue-50 text-blue-500"}`}>
-                      <span className={`mr-1.5 inline-block h-2.5 w-2.5 rounded-full ${dock.is_available ? "bg-green-400" : "bg-blue-400"}`} />
-                      {dock.is_available ? "Free" : "Reserved"}
-                    </span>
+            <Grid item xs={12} sm={6} md={3} key={stat.label}>
+              <Paper className="rounded-xl p-6 border border-slate-100 shadow-sm bg-white hover:shadow-md transition-shadow">
+                <div className="flex items-center justify-between">
+                  <Typography variant="body2" className="text-slate-400 font-medium">{stat.label}</Typography>
+                  <div className={`p-3 rounded-lg ${stat.color.split(" ")[1]}`}>
+                    <Icon className={stat.color.split(" ")[0]} />
                   </div>
                 </div>
-              </div>
+                <Typography variant="h4" className="!font-extrabold text-slate-800 mt-2">{stat.value}</Typography>
+              </Paper>
+            </Grid>
+          );
+        })}
+      </Grid>
 
-              <div className="mt-5 space-y-3">
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="font-mono text-sm font-bold text-sky-600">{dock.token || "#"}</p>
-                  {!dock.is_available && <span className="rounded-full border border-orange-400 bg-orange-50 px-3 py-1 text-xs text-orange-500">Urgent</span>}
+      {/* Time Averages Grid */}
+      <Grid container spacing={3}>
+        {averageStats.map((stat) => {
+          const Icon = stat.icon;
+          return (
+            <Grid item xs={12} md={4} key={stat.label}>
+              <Paper className="rounded-xl p-6 border border-slate-100 shadow-sm bg-white flex gap-4 items-center">
+                <div className="p-4 rounded-full bg-slate-50 text-slate-500">
+                  <Icon fontSize="large" />
                 </div>
-                <p className="text-lg font-bold text-slate-950">{dock.current_vehicle || "."}</p>
-                <p className="flex items-center gap-1.5 text-sm text-slate-400">
-                  <StorefrontOutlinedIcon fontSize="inherit" />
-                  Awaiting dock-in
-                </p>
-                <p className="text-sm font-medium text-blue-500">• Gate In</p>
+                <div>
+                  <Typography variant="h5" className="!font-black text-slate-800">{stat.value}</Typography>
+                  <Typography variant="subtitle2" className="text-slate-500 font-semibold mt-0.5">{stat.label}</Typography>
+                  <Typography variant="caption" className="text-slate-400 block">{stat.desc}</Typography>
+                </div>
+              </Paper>
+            </Grid>
+          );
+        })}
+      </Grid>
+
+      {/* Interactive Charts Section (Phase 5) */}
+      <Grid container spacing={3}>
+        <Grid item xs={12} lg={8}>
+          <Paper className="rounded-xl p-6 border border-slate-100 shadow-sm bg-white">
+            <Typography variant="h6" className="!font-bold text-slate-800 mb-6">Hourly Vehicle Traffic Trend</Typography>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={data.hourly_trend}>
+                  <defs>
+                    <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4}/>
+                      <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="hour" stroke="#94a3b8" fontSize={12} tickLine={false} />
+                  <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} allowDecimals={false} />
+                  <Tooltip />
+                  <Area type="monotone" dataKey="count" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorCount)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} lg={4}>
+          <Paper className="rounded-xl p-6 border border-slate-100 shadow-sm bg-white">
+            <Typography variant="h6" className="!font-bold text-slate-800 mb-6">Supplier Distribution (Today)</Typography>
+            <div className="h-80 flex flex-col justify-between">
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={data.supplier_trend} dataKey="count" nameKey="supplier" cx="50%" cy="50%" outerRadius={70} fill="#8884d8" label>
+                      {data.supplier_trend.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="flex flex-wrap justify-center gap-4 text-xs font-semibold text-slate-500">
+                {data.supplier_trend.map((entry, index) => (
+                  <span key={entry.supplier} className="flex items-center gap-1">
+                    <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
+                    {entry.supplier} ({entry.count})
+                  </span>
+                ))}
               </div>
             </div>
-          ))}
-        </div>
+          </Paper>
+        </Grid>
+      </Grid>
+
+      {/* Dock Status Grid */}
+      <section>
+        <Typography variant="h6" className="!font-bold text-slate-800 mb-5">Loading Dock Overview</Typography>
+        <Grid container spacing={3}>
+          {docks.slice(0, 6).map((dock, index) => {
+            const isAvailable = dock.is_available;
+            const hasVehicle = dock.current_vehicle;
+            const statusLabel = isAvailable ? "Free" : hasVehicle ? hasVehicle.status : "Reserved";
+            
+            return (
+              <Grid item xs={12} sm={6} md={4} lg={2} key={dock.id}>
+                <Paper className="rounded-xl p-5 border border-slate-100 shadow-sm bg-white flex flex-col justify-between min-h-[220px]">
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <div className={`h-10 w-10 flex items-center justify-center rounded-lg font-bold ${isAvailable ? "bg-emerald-50 text-emerald-600" : "bg-indigo-50 text-indigo-600"}`}>
+                        D{index + 1}
+                      </div>
+                      <span className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${isAvailable ? "border-emerald-300 bg-emerald-50 text-emerald-600" : "border-indigo-300 bg-indigo-50 text-indigo-600"}`}>
+                        {statusLabel}
+                      </span>
+                    </div>
+                    <div className="mt-4">
+                      <Typography variant="subtitle1" className="!font-bold text-slate-800">{dock.name}</Typography>
+                      <Typography variant="caption" className="text-slate-400 font-medium">Supports: {dock.capabilities}</Typography>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 pt-3 border-t border-slate-50">
+                    {hasVehicle ? (
+                      <div>
+                        <Typography variant="body2" className="font-bold text-slate-700">{hasVehicle.vehicle_number}</Typography>
+                        <Typography variant="caption" className="text-slate-400 block mt-0.5">{hasVehicle.supplier}</Typography>
+                        <Typography variant="caption" className="text-sky-600 font-mono font-bold block">{hasVehicle.elapsed_minutes}m elapsed</Typography>
+                      </div>
+                    ) : (
+                      <Typography variant="body2" className="text-slate-350 font-medium italic">Awaiting allocation</Typography>
+                    )}
+                  </div>
+                </Paper>
+              </Grid>
+            );
+          })}
+        </Grid>
       </section>
 
+      {/* Status Bar Distribution */}
+      <Paper className="rounded-xl p-6 border border-slate-100 shadow-sm bg-white">
+        <Typography variant="h6" className="!font-bold text-slate-800 mb-6">Active Status Distribution</Typography>
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={data.status_distribution}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+              <XAxis dataKey="status" stroke="#94a3b8" fontSize={11} tickLine={false} />
+              <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} allowDecimals={false} />
+              <Tooltip />
+              <Bar dataKey="value" fill="#6366f1" radius={[4, 4, 0, 0]} barSize={40}>
+                {data.status_distribution.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </Paper>
+
+      {/* Recent Activities Section */}
       <section>
-        <h3 className="mb-5 text-lg font-bold uppercase tracking-wide text-slate-400">Recent Activity</h3>
-        <div className="overflow-hidden rounded-xl border border-slate-950 bg-white">
-          {recentActivity.map((item) => (
-            <div key={item.id} className="grid gap-4 border-b border-slate-950 px-5 py-4 last:border-b-0 md:grid-cols-[120px_1fr_auto_auto_auto] md:items-center">
-              <span className="font-mono text-sm text-sky-600">{item.token}</span>
-              <span className="font-bold text-slate-950">{item.vehicle_number}</span>
-              <span className="w-fit rounded-full border border-blue-500 bg-blue-50 px-4 py-1 text-sm font-medium text-blue-500">• {item.status}</span>
-              <span className={`w-fit rounded-full border px-4 py-1 text-sm font-medium ${item.priority === "Urgent" ? "border-orange-400 bg-orange-50 text-orange-500" : "border-slate-400 bg-slate-100 text-slate-500"}`}>
-                {item.priority}
-              </span>
-              <span className="text-sm text-slate-400">{item.date}</span>
+        <Typography variant="h6" className="!font-bold text-slate-800 mb-4">Recent System Logs</Typography>
+        <Paper className="rounded-xl border border-slate-100 shadow-sm bg-white overflow-hidden">
+          {data.recent_activity.map((activity, index) => (
+            <div key={index} className="flex flex-wrap items-center justify-between border-b border-slate-100 p-4 last:border-b-0 gap-3 hover:bg-slate-50 transition-colors">
+              <div className="flex gap-3 items-center">
+                <span className="text-xs font-semibold text-slate-400 font-mono">
+                  {new Date(activity.time).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                </span>
+                <Typography variant="body2" className="!font-bold text-slate-800">{activity.title}</Typography>
+              </div>
+              <Typography variant="body2" className="text-slate-450 italic">{activity.description}</Typography>
             </div>
           ))}
-        </div>
+          {data.recent_activity.length === 0 && (
+            <div className="text-center p-8 text-slate-400 font-medium">No recent logs recorded.</div>
+          )}
+        </Paper>
       </section>
     </div>
   );

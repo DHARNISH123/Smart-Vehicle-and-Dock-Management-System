@@ -157,6 +157,17 @@ def update_status(vehicle_id):
     
     return jsonify(vehicle_data)
 
+@vehicles_bp.route("/<int:vehicle_id>/logs", methods=["GET"])
+@jwt_required()
+def get_vehicle_logs(vehicle_id):
+    logs = VehicleLog.query.filter_by(vehicle_id=vehicle_id).order_by(VehicleLog.timestamp.asc()).all()
+    return jsonify([{
+        "id": l.id,
+        "status": l.status,
+        "timestamp": l.timestamp.isoformat(),
+        "notes": l.notes
+    } for l in logs])
+
 @vehicles_bp.route("/public/track/<string:token>", methods=["GET"])
 def public_track_vehicle(token):
     vehicle = Vehicle.query.filter_by(token=token).first()

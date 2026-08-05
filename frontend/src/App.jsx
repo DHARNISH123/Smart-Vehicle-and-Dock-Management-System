@@ -7,7 +7,7 @@ import VehicleQueue from "./pages/VehicleQueue";
 import DockManagement from "./pages/DockManagement";
 import VehicleTracking from "./pages/VehicleTracking";
 import Reports from "./pages/Reports";
-import AdminPanel from "./pages/AdminPanel";
+import Masters from "./pages/Masters";
 import DisplayBoard from "./pages/DisplayBoard";
 import PrivateRoute from "./components/PrivateRoute";
 import DriverTracker from "./pages/DriverTracker";
@@ -24,7 +24,7 @@ function App() {
         <Route path="dock-management" element={<DockManagement />} />
         <Route path="vehicle-tracking" element={<VehicleTracking />} />
         <Route path="reports" element={<Reports />} />
-        <Route path="admin" element={<AdminPanel />} />
+        <Route path="masters" element={<Masters />} />
         <Route path="display-board" element={<DisplayBoard />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

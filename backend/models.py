@@ -12,6 +12,10 @@ class User(db.Model):
     full_name = db.Column(db.String(120))
     mobile = db.Column(db.String(30))
     email = db.Column(db.String(120), unique=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_by = db.Column(db.String(100), default="system")
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_by = db.Column(db.String(100), default="system")
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -24,6 +28,10 @@ class Supplier(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), nullable=False)
     priority = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_by = db.Column(db.String(100), default="system")
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_by = db.Column(db.String(100), default="system")
     vehicles = db.relationship("Vehicle", backref="supplier", lazy=True)
 
 class Transporter(db.Model):
@@ -31,6 +39,10 @@ class Transporter(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), nullable=False)
     contact = db.Column(db.String(80))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_by = db.Column(db.String(100), default="system")
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_by = db.Column(db.String(100), default="system")
     vehicles = db.relationship("Vehicle", backref="transporter", lazy=True)
 
 class Dock(db.Model):
@@ -40,7 +52,12 @@ class Dock(db.Model):
     name = db.Column(db.String(120), nullable=False)
     is_active = db.Column(db.Boolean, default=True)
     is_available = db.Column(db.Boolean, default=True)
+    capabilities = db.Column(db.String(255), default="All")  # E.g. 'Perishable', 'Hazardous', or 'All'
     current_vehicle_id = db.Column(db.Integer, db.ForeignKey("vehicles.id"), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_by = db.Column(db.String(100), default="system")
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_by = db.Column(db.String(100), default="system")
     allocations = db.relationship("DockAllocation", backref="dock", lazy=True)
 
 class Vehicle(db.Model):
@@ -72,7 +89,7 @@ class VehicleLog(db.Model):
     __tablename__ = "vehicle_logs"
     id = db.Column(db.Integer, primary_key=True)
     vehicle_id = db.Column(db.Integer, db.ForeignKey("vehicles.id"), nullable=False)
-    status = db.Column(db.String(80), nullable=False)
+    status = db.Column(db.String(50), nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     notes = db.Column(db.Text)
 
@@ -102,3 +119,22 @@ class Report(db.Model):
     type = db.Column(db.String(80), nullable=False)
     data = db.Column(JSON)
     generated_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class Material(db.Model):
+    __tablename__ = "materials"
+    id = db.Column(db.Integer, primary_key=True)
+    code = db.Column(db.String(80), unique=True, nullable=False)
+    name = db.Column(db.String(120), nullable=False)
+    dock_capabilities = db.Column(db.String(255), default="All")
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_by = db.Column(db.String(100), default="system")
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_by = db.Column(db.String(100), default="system")
+
+class AuditLog(db.Model):
+    __tablename__ = "audit_logs"
+    id = db.Column(db.Integer, primary_key=True)
+    operator = db.Column(db.String(120), nullable=False)
+    action = db.Column(db.String(120), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)

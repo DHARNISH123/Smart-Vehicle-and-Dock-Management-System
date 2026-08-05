@@ -17,10 +17,10 @@ function Login() {
   const navigate = useNavigate();
 
   const quickAccess = [
-    { title: "Admin", code: "ADMIN001", icon: ShieldOutlinedIcon, color: "border-violet-500/50 text-violet-300" },
-    { title: "Gate Operator", code: "GATE001", icon: LocalShippingOutlinedIcon, color: "border-blue-500/50 text-blue-300" },
-    { title: "Dock Supervisor", code: "DOCK001", icon: Inventory2OutlinedIcon, color: "border-amber-500/50 text-amber-300" },
-    { title: "Management", code: "MGMT001", icon: BarChartOutlinedIcon, color: "border-emerald-500/50 text-emerald-300" },
+    { title: "Admin", username: "admin", password: "admin123", icon: ShieldOutlinedIcon, color: "border-violet-500/50 text-violet-300" },
+    { title: "Gate Operator", username: "gate", password: "operator123", icon: LocalShippingOutlinedIcon, color: "border-blue-500/50 text-blue-300" },
+    { title: "Dock Supervisor", username: "dock", password: "supervisor123", icon: Inventory2OutlinedIcon, color: "border-amber-500/50 text-amber-300" },
+    { title: "Management", username: "management", password: "management123", icon: BarChartOutlinedIcon, color: "border-emerald-500/50 text-emerald-300" },
   ];
 
   const handleSubmit = async (event) => {
@@ -28,6 +28,8 @@ function Login() {
     try {
       const response = await api.post("/auth/login", { username, password });
       localStorage.setItem("auth_token", response.data.access_token);
+      localStorage.setItem("user_role", response.data.user.role);
+      localStorage.setItem("user_name", response.data.user.full_name || response.data.user.username);
       navigate("/");
     } catch (err) {
       setError(err.response?.data?.error || "Unable to login");
@@ -107,14 +109,13 @@ function Login() {
                     key={item.title}
                     type="button"
                     onClick={() => {
-                      setUsername("admin");
-                      setPassword("admin123");
+                      setUsername(item.username);
+                      setPassword(item.password);
                     }}
-                    className={`rounded-xl border bg-[#141720] px-3 py-5 text-center ${item.color}`}
+                    className={`rounded-xl border bg-[#141720] px-3 py-5 text-center ${item.color} hover:bg-[#1a1e2a] transition-colors`}
                   >
                     <Icon />
                     <p className="mt-3 text-xs font-bold text-slate-200">{item.title}</p>
-                    <p className="mt-3 text-[10px] font-medium text-slate-500">{item.code}</p>
                   </button>
                 );
               })}
@@ -131,7 +132,7 @@ function Login() {
               <div>
                 <label className="mb-3 block text-sm font-bold text-slate-300">Employee ID</label>
                 <TextField
-                  placeholder="e.g. GATE001"
+                  placeholder="e.g. gate"
                   fullWidth
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
@@ -155,15 +156,6 @@ function Login() {
                   fullWidth
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton edge="end" className="!text-slate-500">
-                          <VisibilityOutlinedIcon />
-                        </IconButton>
-                      </InputAdornment>
-                    ),
-                  }}
                   sx={{
                     "& .MuiOutlinedInput-root": {
                       color: "#e5e7eb",
