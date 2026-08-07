@@ -57,7 +57,18 @@ def create_app():
             return send_from_directory(app.static_folder, "index.html")
 
     def ensure_seed_data():
-        db.create_all()
+        try:
+            db.create_all()
+            # Test schema query to detect missing columns
+            User.query.first()
+        except Exception as e:
+            print("Database schema mismatch detected. Recreating tables...")
+            try:
+                db.drop_all()
+            except Exception:
+                pass
+            db.create_all()
+
         # Seed default users for different roles
         users_seed = [
             {"username": "admin", "role": "admin", "full_name": "Administrator", "password": "admin123"},
