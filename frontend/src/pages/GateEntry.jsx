@@ -178,26 +178,32 @@ function GateEntry() {
         <Grid item xs={12} md={4}>
           <div className="space-y-6">
             {/* ANPR Camera Simulation */}
-            <Card className="rounded-xl border border-slate-200 shadow-md bg-white">
+            <Card className="rounded-xl border border-slate-200 shadow-md bg-white overflow-hidden">
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-3">
                   <CameraAltIcon className="text-slate-650" />
-                  <Typography variant="subtitle1" className="!font-bold text-slate-800">ANPR Simulator (License Plate)</Typography>
+                  <Typography variant="subtitle1" className="!font-bold text-slate-800">ANPR Cam (License Plate)</Typography>
                 </div>
                 <Typography variant="body2" className="text-slate-450">Simulates gate camera plate capture and auto-fills registration form.</Typography>
-                <div className="flex flex-col gap-2">
-                  {anprLicensePlate && (
-                    <div className="text-center rounded-lg border border-slate-350 bg-slate-50 py-3 font-mono text-2xl font-black text-slate-800 tracking-wider">
-                      {anprLicensePlate}
-                    </div>
-                  )}
-                  <Button variant="outlined" fullWidth onClick={simulateANPR} disabled={anprScanning} className="!normal-case !font-semibold !py-2.5">
-                    {anprScanning ? <CircularProgress size={20} color="inherit" /> : "Simulate Camera Capture"}
-                  </Button>
+                
+                {/* Visual Camera Feed Box */}
+                <div className="scanner-feed h-28 flex items-center justify-center relative">
+                  {anprScanning && <div className="laser-scan-line" />}
+                  <div className="absolute top-2 left-2 flex items-center gap-1.5 z-10 bg-slate-950/80 px-2 py-0.5 rounded text-[10px] font-bold text-slate-300">
+                    <span className={`h-1.5 w-1.5 rounded-full ${anprScanning ? "bg-rose-500 animate-pulse" : "bg-emerald-500"}`} />
+                    ANPR FEED-01
+                  </div>
+                  <Typography className="font-mono text-xl font-bold text-slate-100 z-10 tracking-widest">
+                    {anprScanning ? "SCANNING PLATES..." : anprLicensePlate || "TN55CB7077"}
+                  </Typography>
                 </div>
+
+                <Button variant="outlined" fullWidth onClick={simulateANPR} disabled={anprScanning} className="!normal-case !font-semibold !py-2.5">
+                  {anprScanning ? "Scanning..." : "Simulate Camera Capture"}
+                </Button>
               </CardContent>
             </Card>
-
+ 
             {/* RFID Scanner Simulation */}
             <Card className="rounded-xl border border-slate-200 shadow-md bg-white">
               <CardContent className="space-y-4">
@@ -206,41 +212,53 @@ function GateEntry() {
                   <Typography variant="subtitle1" className="!font-bold text-slate-800">RFID Scanner Simulator</Typography>
                 </div>
                 <Typography variant="body2" className="text-slate-450">Simulates driver waving wind-shield RFID tag at the gate scanner.</Typography>
-                <div className="flex flex-col gap-2">
-                  {rfidTag && (
-                    <div className="text-center rounded-lg border border-slate-300 bg-sky-50/50 py-3 font-mono text-lg font-bold text-sky-700">
-                      {rfidTag}
-                    </div>
+                
+                {/* Visual RFID Scanner Box */}
+                <div className="h-28 flex items-center justify-center border border-slate-100 bg-slate-50/50 rounded-lg relative overflow-hidden">
+                  {rfidScanning && (
+                    <>
+                      <div className="rfid-ripple-circle h-14 w-14" style={{ animationDelay: '0s' }} />
+                      <div className="rfid-ripple-circle h-14 w-14" style={{ animationDelay: '0.4s' }} />
+                      <div className="rfid-ripple-circle h-14 w-14" style={{ animationDelay: '0.8s' }} />
+                    </>
                   )}
-                  <Button variant="outlined" fullWidth onClick={simulateRFID} disabled={rfidScanning} className="!normal-case !font-semibold !py-2.5">
-                    {rfidScanning ? <CircularProgress size={20} color="inherit" /> : "Simulate RFID Scan"}
-                  </Button>
+                  <Typography className="font-mono text-sky-600 font-extrabold z-10 tracking-wide text-sm">
+                    {rfidScanning ? "READING TAGS..." : rfidTag || "RFID TAG READY"}
+                  </Typography>
                 </div>
+
+                <Button variant="outlined" fullWidth onClick={simulateRFID} disabled={rfidScanning} className="!normal-case !font-semibold !py-2.5">
+                  {rfidScanning ? "Scanning..." : "Simulate RFID Scan"}
+                </Button>
               </CardContent>
             </Card>
-
+ 
             {/* Live Token & QR Code Block */}
             {tokenGenerated && (
-              <Card className="rounded-xl border border-sky-400 bg-sky-50/20 shadow-md">
-                <CardContent className="text-center space-y-4">
-                  <div className="flex justify-center items-center gap-2 text-sky-600">
-                    <QrCode2Icon fontSize="large" />
-                    <Typography variant="subtitle1" className="!font-bold">Digital Token Gate Pass</Typography>
-                  </div>
-                  <div className="inline-block p-4 bg-white border border-slate-200 rounded-xl">
-                    {/* Simulated visual QR Code */}
-                    <div className="w-32 h-32 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-900 via-slate-800 to-slate-950 flex flex-wrap items-center justify-center p-2 rounded-lg">
-                      <div className="w-full text-[9px] font-mono text-cyan-400 font-bold leading-3 break-all overflow-hidden max-h-full">
-                        {qrCode}<br/>{tokenGenerated}
+              <div className="relative pt-4">
+                {/* Print slot visual */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-4/5 h-2.5 bg-slate-800 border border-slate-900 rounded-b-lg shadow-inner z-20" />
+                <Card className="ticket-print-animation rounded-xl border border-sky-400 bg-sky-50/20 shadow-md relative z-10">
+                  <CardContent className="text-center space-y-4 pt-6">
+                    <div className="flex justify-center items-center gap-2 text-sky-600">
+                      <QrCode2Icon fontSize="large" />
+                      <Typography variant="subtitle1" className="!font-bold">Digital Token Gate Pass</Typography>
+                    </div>
+                    <div className="inline-block p-4 bg-white border border-slate-200 rounded-xl shadow-inner">
+                      {/* Simulated visual QR Code */}
+                      <div className="w-28 h-28 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-900 via-slate-800 to-slate-950 flex flex-wrap items-center justify-center p-2 rounded-lg">
+                        <div className="w-full text-[9px] font-mono text-cyan-400 font-bold leading-3 break-all overflow-hidden max-h-full">
+                          {qrCode}<br/>{tokenGenerated}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div>
-                    <Typography variant="h5" className="!font-black text-slate-800">{tokenGenerated}</Typography>
-                    <Typography variant="body2" className="text-slate-500 mt-1">Pass printed. Operator checked in.</Typography>
-                  </div>
-                </CardContent>
-              </Card>
+                    <div>
+                      <Typography variant="h5" className="!font-black text-slate-850">{tokenGenerated}</Typography>
+                      <Typography variant="body2" className="text-slate-500 mt-1 font-semibold">Pass printed successfully.</Typography>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             )}
           </div>
         </Grid>

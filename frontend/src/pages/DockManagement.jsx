@@ -25,6 +25,7 @@ function DockManagement() {
       setLoading(false);
     } catch (err) {
       console.error(err);
+      setLoading(false);
     }
   };
 
@@ -109,6 +110,64 @@ function DockManagement() {
         </div>
         <span className="signal-pill">Allocation Control</span>
       </div>
+      {/* Real-Time Facility Layout Map (Phase 4 UX) */}
+      <Paper className="surface-panel rounded-xl p-6 border border-slate-100 shadow-sm bg-white overflow-hidden">
+        <div className="flex items-center gap-2 mb-6">
+          <WarehouseIcon className="text-sky-600" />
+          <Typography variant="h6" className="!font-bold text-slate-800">Visual Dock Bay Occupancy Layout Map</Typography>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-4 border-2 border-dashed border-slate-200/60 p-6 rounded-2xl bg-slate-50/50 relative">
+          {docks.map((dock, index) => {
+            const hasVehicle = dock.current_vehicle;
+            const isAvailable = dock.is_available;
+            
+            return (
+              <div 
+                key={dock.id} 
+                className={`relative flex flex-col items-center justify-between p-4 rounded-xl border h-36 transition-all duration-300 ${
+                  isAvailable 
+                    ? "border-slate-200 bg-white" 
+                    : "border-indigo-200 bg-indigo-50/20 shadow-md shadow-indigo-500/5"
+                }`}
+              >
+                {/* Bay Number */}
+                <span className="absolute top-2 left-2 text-[10px] font-black text-slate-400">BAY 0{index + 1}</span>
+                
+                {/* Truck Slot */}
+                <div className="flex-1 flex items-center justify-center w-full mt-4">
+                  {hasVehicle ? (
+                    <div className="truck-parking-anim flex flex-col items-center gap-1.5 w-full">
+                      {/* Visual Truck Cab block */}
+                      <div className="flex flex-col items-center bg-indigo-600 text-white px-2 py-1.5 rounded-md shadow w-4/5 text-center relative">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 absolute top-1 right-1 animate-pulse" />
+                        <Typography className="font-mono text-[9px] font-extrabold tracking-wider">{hasVehicle.vehicle_number}</Typography>
+                      </div>
+                      {/* Wheels */}
+                      <div className="flex justify-between w-2/3 px-1">
+                        <span className="w-2.5 h-1.5 bg-slate-800 rounded-full" />
+                        <span className="w-2.5 h-1.5 bg-slate-800 rounded-full" />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-lg w-4/5 py-4 text-slate-300">
+                      <Typography className="text-[10px] font-extrabold tracking-wide uppercase">Vacant</Typography>
+                    </div>
+                  )}
+                </div>
+
+                {/* Status Dot Pill */}
+                <div className="flex items-center gap-1.5 mt-2">
+                  <span className={`h-2 w-2 rounded-full ${isAvailable ? "bg-slate-300" : "bg-indigo-500 animate-pulse"}`} />
+                  <span className="text-[9px] font-black uppercase text-slate-500">
+                    {isAvailable ? "Ready" : hasVehicle?.status.split(" ")[0] || "Parked"}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </Paper>
 
       {/* Dock Grid */}
       <Grid container spacing={3}>

@@ -103,3 +103,78 @@ body {
   content: '';
   @apply absolute left-0 top-[20%] h-[60%] w-[4px] rounded-r bg-sky-500;
 }
+
+/* ANPR Camera Laser Scan Simulation */
+@keyframes laser-scan {
+  0% { top: 4%; }
+  50% { top: 96%; }
+  100% { top: 4%; }
+}
+
+.scanner-feed {
+  position: relative;
+  overflow: hidden;
+  background: #0f172a;
+  border: 2px solid #334155;
+  border-radius: 8px;
+}
+
+.laser-scan-line {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: #f43f5e;
+  box-shadow: 0 0 10px #f43f5e, 0 0 4px #f43f5e;
+  animation: laser-scan 2s infinite linear;
+}
+
+/* RFID Pulse Ripple Simulation */
+@keyframes rfid-ping {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+.rfid-ripple-circle {
+  @apply absolute rounded-full border-4 border-sky-400 opacity-0;
+  animation: rfid-ping 1.4s infinite cubic-bezier(0.21, 0.6, 0.35, 1);
+}
+
+/* Ticket Printing Animation */
+@keyframes slide-out-pass {
+  0% {
+    transform: translateY(-80%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.ticket-print-animation {
+  animation: slide-out-pass 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Dock Layout Truck Parking Animation */
+@keyframes truck-back-in {
+  0% {
+    transform: translateY(-40px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.truck-parking-anim {
+  animation: truck-back-in 1.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
