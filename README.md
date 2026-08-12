@@ -2,6 +2,8 @@
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/DHARNISH123/Smart-Vehicle-and-Dock-Management-System)
 
+**Live Server URL**: [https://gate2dock-live.onrender.com](https://gate2dock-live.onrender.com)
+
 Gate-2-Dock is a full-stack yard operations system for managing vehicle gate entry, queue monitoring, dock allocation, vehicle tracking, KPI reports, user administration, and live display boards.
 
 ## Features
