@@ -27,5 +27,5 @@ ENV PORT=5000
 
 EXPOSE 5000
 
-# Start Backend using Gunicorn with Eventlet (required for Flask-SocketIO websockets)
-CMD ["gunicorn", "--worker-class", "eventlet", "-w", "1", "-b", "0.0.0.0:5000", "backend.app:create_app()"]
+# Start Backend using Python runner directly (avoids eventlet/gunicorn compilation errors)
+CMD ["python", "backend/app.py"]
