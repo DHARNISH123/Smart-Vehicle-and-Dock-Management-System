@@ -40,17 +40,20 @@ function Layout() {
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-950">
-      <header className="fixed left-0 right-0 top-0 z-30 flex h-[60px] items-center justify-between border-b border-slate-200 bg-white px-4 shadow-sm">
+      <header className="fixed left-0 right-0 top-0 z-30 flex h-[60px] items-center justify-between border-b border-slate-100 bg-white px-5 shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded bg-sky-500 text-sm font-black text-white">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-sky-500 to-indigo-600 text-sm font-black text-white shadow-md">
             G2D
           </div>
-          <h1 className="text-xl font-semibold text-slate-950 font-sans tracking-wide">Gate-2-Dock</h1>
+          <h1 className="text-lg font-bold text-slate-800 tracking-wide font-sans">Gate-2-Dock</h1>
         </div>
-        <div className="flex items-center gap-7">
-          <div className="hidden text-right sm:block">
-            <p className="text-sm font-semibold text-slate-950">{userName}</p>
-            <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">{userRole.replace("_", " ")}</p>
+        <div className="flex items-center gap-6">
+          <div className="hidden text-right sm:flex sm:items-center sm:gap-2">
+            <span className="status-dot bg-emerald-500" />
+            <div>
+              <p className="text-sm font-bold text-slate-700 leading-tight">{userName}</p>
+              <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">{userRole.replace("_", " ")}</p>
+            </div>
           </div>
           <Button
             variant="contained"
@@ -63,7 +66,7 @@ function Layout() {
         </div>
       </header>
 
-      <aside className="fixed bottom-0 left-0 top-[60px] z-20 hidden w-16 border-r border-slate-200 bg-white pt-7 shadow-sm md:block">
+      <aside className="fixed bottom-0 left-0 top-[60px] z-20 hidden w-16 border-r border-slate-100 bg-white pt-7 shadow-sm md:block">
         <div className="mb-12 flex justify-center text-slate-400">
           <ChevronRightIcon />
         </div>
@@ -77,8 +80,8 @@ function Layout() {
                 end={item.path === "/"}
                 title={item.label}
                 className={({ isActive }) =>
-                  `mx-auto flex h-12 w-14 items-center justify-center rounded-lg transition ${
-                    isActive ? "bg-sky-50 text-sky-600" : "text-slate-400 hover:bg-slate-50 hover:text-sky-600"
+                  `mx-auto flex h-12 w-12 items-center justify-center rounded-lg transition relative duration-200 ${
+                    isActive ? "bg-sky-50 text-sky-600 nav-active-bar" : "text-slate-400 hover:bg-slate-50/50 hover:text-sky-600"
                   }`
                 }
               >

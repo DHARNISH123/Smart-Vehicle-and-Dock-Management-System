@@ -9,7 +9,7 @@ from services.notifications import send_whatsapp_message
 
 docks_bp = Blueprint("docks", __name__)
 
-@docks_bp.route("/", methods=["GET"])
+@docks_bp.route("", methods=["GET"])
 @jwt_required()
 def list_docks():
     docks = Dock.query.order_by(Dock.code).all()

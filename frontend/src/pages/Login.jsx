@@ -37,26 +37,26 @@ function Login() {
   };
 
   return (
-    <div className="grid min-h-screen bg-[#0f1118] text-white lg:grid-cols-2">
-      <section className="relative overflow-hidden bg-[linear-gradient(135deg,#1f5f9d,#10a6b6)] px-8 py-12 md:px-20">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.14),transparent_26rem)]" />
+    <div className="grid min-h-screen bg-[#0a0c10] text-white lg:grid-cols-2">
+      <section className="relative overflow-hidden bg-[linear-gradient(135deg,#0d1326,#14244d)] px-8 py-12 md:px-20 border-r border-slate-900">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(99,102,241,0.15),transparent_35rem)]" />
         <div className="relative flex min-h-[calc(100vh-6rem)] flex-col">
           <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/25 bg-white/10">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-indigo-500/25 bg-indigo-500/10 text-indigo-400 shadow-md shadow-indigo-500/5">
               <LocalShippingOutlinedIcon />
             </div>
-            <p className="text-2xl font-bold">Gate2Dock</p>
+            <p className="text-xl font-bold tracking-wide font-sans bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-300">Gate2Dock</p>
           </div>
-
+ 
           <div className="mt-20">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/15 px-4 py-2 text-sm font-bold shadow-lg">
-              <span className="h-2.5 w-2.5 rounded-full bg-green-400" />
+            <div className="inline-flex items-center gap-2 rounded-full border border-sky-500/30 bg-sky-500/10 px-4 py-2 text-xs font-bold text-sky-400 tracking-wider uppercase shadow-inner">
+              <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse" />
               Enterprise Vehicle Tracking
             </div>
-            <h1 className="mt-10 max-w-xl text-6xl font-black leading-none tracking-tight md:text-7xl">
-              Innovation and <span className="text-cyan-200">You.</span>
+            <h1 className="mt-8 max-w-xl text-5xl font-black leading-[1.1] tracking-tight md:text-6xl bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-100 to-sky-200">
+              Yard Operations <span className="text-sky-400 font-extrabold">Redefined.</span>
             </h1>
-            <p className="mt-8 max-w-2xl text-xl leading-9 text-white/78">
+            <p className="mt-6 max-w-xl text-base leading-relaxed text-slate-400 font-medium">
               Seamlessly coordinate your facility's operations. Gate2Dock connects gate operators and dock supervisors, providing real-time visibility into vehicle arrivals, waiting queues, and dock allocations to eliminate bottlenecks.
             </p>
           </div>
@@ -91,17 +91,17 @@ function Login() {
         </div>
       </section>
 
-      <section className="relative flex items-center justify-center overflow-hidden bg-[#101218] px-6 py-12">
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.035)_1px,transparent_1px)] bg-[size:48px_48px]" />
+      <section className="relative flex items-center justify-center overflow-hidden bg-[#0d0f14] px-6 py-12">
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:48px_48px]" />
         <div className="relative w-full max-w-xl">
-          <div className="mb-12">
-            <h2 className="text-4xl font-bold tracking-tight">Welcome back</h2>
-            <p className="mt-4 text-lg text-slate-400">Enter your credentials to access the workspace.</p>
+          <div className="mb-10">
+            <h2 className="text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-350">Welcome Back</h2>
+            <p className="mt-3 text-sm text-slate-450 font-medium">Enter your VMS employee credentials to access the console.</p>
           </div>
-
-          <div className="rounded-2xl border border-slate-700/70 bg-[#1b1e28] p-10 shadow-2xl shadow-black/25">
-            <p className="text-sm font-bold uppercase tracking-[0.22em] text-slate-400">Quick Access — Dev</p>
-            <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
+ 
+          <div className="rounded-2xl border border-slate-800 bg-[#121620]/90 backdrop-blur-xl p-8 shadow-2xl shadow-black/40">
+            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500">Quick Access Roles</p>
+            <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
               {quickAccess.map((item) => {
                 const Icon = item.icon;
                 return (
@@ -112,25 +112,24 @@ function Login() {
                       setUsername(item.username);
                       setPassword(item.password);
                     }}
-                    className={`rounded-xl border bg-[#141720] px-3 py-5 text-center ${item.color} hover:bg-[#1a1e2a] transition-colors`}
+                    className={`rounded-xl border bg-[#0b0e14] p-3 text-center transition-all duration-200 hover:scale-[1.03] ${item.color} hover:bg-[#121622] hover:border-slate-700/60 shadow-md`}
                   >
-                    <Icon />
-                    <p className="mt-3 text-xs font-bold text-slate-200">{item.title}</p>
+                    <Icon fontSize="small" />
+                    <p className="mt-2 text-[10px] font-extrabold text-slate-300 tracking-wide uppercase">{item.title.split(" ")[0]}</p>
                   </button>
                 );
               })}
             </div>
-
-            <div className="my-9 flex items-center gap-5 text-sm font-bold uppercase tracking-wide text-slate-500">
-              <span className="h-px flex-1 bg-slate-700/70" />
+            <div className="my-7 flex items-center gap-4 text-xs font-bold uppercase tracking-wider text-slate-500">
+              <span className="h-px flex-1 bg-slate-800" />
               Or Sign In Manually
-              <span className="h-px flex-1 bg-slate-700/70" />
+              <span className="h-px flex-1 bg-slate-800" />
             </div>
-
-            {error && <Typography className="!mb-4 !rounded-lg !border !border-red-400/30 !bg-red-400/10 !p-3 !text-red-200">{error}</Typography>}
-            <Box component="form" onSubmit={handleSubmit} className="space-y-6">
+ 
+            {error && <Typography className="!mb-4 !rounded-lg !border !border-red-500/20 !bg-red-500/5 !p-3 !text-red-400 !text-sm font-semibold">{error}</Typography>}
+            <Box component="form" onSubmit={handleSubmit} className="space-y-5">
               <div>
-                <label className="mb-3 block text-sm font-bold text-slate-300">Employee ID</label>
+                <label className="mb-2 block text-xs font-bold text-slate-400 uppercase tracking-wider">Employee ID</label>
                 <TextField
                   placeholder="e.g. gate"
                   fullWidth
@@ -138,18 +137,21 @@ function Login() {
                   onChange={(e) => setUsername(e.target.value)}
                   sx={{
                     "& .MuiOutlinedInput-root": {
-                      color: "#e5e7eb",
-                      backgroundColor: "#13161d",
-                      borderRadius: "8px",
+                      color: "#f3f4f6",
+                      backgroundColor: "#0a0c10",
+                      borderRadius: "10px",
+                      fontSize: "14px",
+                      "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#4b5563" },
+                      "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#6366f1" },
                     },
-                    "& .MuiOutlinedInput-notchedOutline": { borderColor: "#303642" },
+                    "& .MuiOutlinedInput-notchedOutline": { borderColor: "#1f2937" },
                   }}
                 />
               </div>
               <div>
-                <div className="mb-3 flex items-center justify-between text-sm">
-                  <label className="font-bold text-slate-300">Password</label>
-                  <span className="font-semibold text-cyan-400">Forgot password?</span>
+                <div className="mb-2 flex items-center justify-between text-xs">
+                  <label className="font-bold text-slate-400 uppercase tracking-wider">Password</label>
+                  <span className="font-semibold text-indigo-400 hover:underline cursor-pointer">Forgot password?</span>
                 </div>
                 <TextField
                   type="password"
@@ -158,11 +160,14 @@ function Login() {
                   onChange={(e) => setPassword(e.target.value)}
                   sx={{
                     "& .MuiOutlinedInput-root": {
-                      color: "#e5e7eb",
-                      backgroundColor: "#13161d",
-                      borderRadius: "8px",
+                      color: "#f3f4f6",
+                      backgroundColor: "#0a0c10",
+                      borderRadius: "10px",
+                      fontSize: "14px",
+                      "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#4b5563" },
+                      "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#6366f1" },
                     },
-                    "& .MuiOutlinedInput-notchedOutline": { borderColor: "#303642" },
+                    "& .MuiOutlinedInput-notchedOutline": { borderColor: "#1f2937" },
                   }}
                 />
               </div>
@@ -171,7 +176,7 @@ function Login() {
                 variant="contained"
                 fullWidth
                 startIcon={<LoginOutlinedIcon />}
-                className="!rounded-lg !bg-[linear-gradient(90deg,#2477b5,#14b8d3)] !py-4 !text-base !font-bold !normal-case hover:!opacity-95"
+                className="!rounded-xl !bg-gradient-to-r from-sky-500 to-indigo-650 !py-3.5 !text-sm !font-bold !normal-case hover:!brightness-110 shadow-lg shadow-sky-500/10"
               >
                 Sign In to Workspace
               </Button>

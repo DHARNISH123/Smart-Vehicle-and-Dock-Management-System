@@ -9,7 +9,7 @@ from services.notifications import send_whatsapp_message
 
 vehicles_bp = Blueprint("vehicles", __name__)
 
-@vehicles_bp.route("/", methods=["GET"])
+@vehicles_bp.route("", methods=["GET"])
 @jwt_required()
 def get_vehicles():
     vehicles = Vehicle.query.order_by(Vehicle.report_time.desc()).all()
